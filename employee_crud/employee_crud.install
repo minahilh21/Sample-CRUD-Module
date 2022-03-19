@@ -1,0 +1,50 @@
+<?php
+/**
+ * Implements hook_schema().
+ */
+function employee_crud_schema() {
+  $schema = array();
+  $schema['employee'] = array(
+    'description' => 'Table for Employees',
+    'primary key' => array('id'),
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary key identifier for authentication',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        ),
+      'name' => array(
+        'description' => 'Name of employee',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        ),
+      'job' => array(
+        'description' => 'job of employee',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        ),
+      'dept' => array(
+        'description' => 'department of employee',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        ),
+      'hire_date' => array(
+        'description' => 'Eoining date of employee',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        ),
+      'salary' => array(
+        'description' => 'salary of employee',
+        'type' => 'int',
+        'length' => 20,
+        'not null' => TRUE,
+        ),
+      ),
+    );
+  return $schema;
+}

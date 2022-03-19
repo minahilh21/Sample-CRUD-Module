@@ -1,0 +1,496 @@
+<?php
+function employee_crud_menu() {
+  $items = array();
+  //url to create employee
+  $items['employee/create'] = array(
+    'title' => t('Creating employees'),
+    'page callback' => 'create_employee',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  ); 
+  //url to read employee
+  $items['employee/read'] = array(
+    'title' => t('Reading employees'),
+    'page callback' => 'read_employees',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  ); 
+  //url to update employee
+  $items['employee/update'] = array(
+    'title' => t('Reading employees'),
+    'page callback' => 'update_employee',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  ); 
+  //url to delete employee
+  $items['employee/delete'] = array(
+    'title' => t('Deleting employees'),
+    'page callback' => 'delete_employee',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );   
+  return $items;
+} 
+function create_employee() {
+  if($_SERVER['REQUEST_METHOD'] == "POST") {
+    //to check if the id is provided
+    if(!isset($_REQUEST['id'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee ID cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee ID cannot be empty.",
+        ],
+      ]);
+    }
+    // to check id is a positive integer
+    else if ($_REQUEST['id'] < 0 || !is_numeric($_REQUEST['id'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Invalid Employee ID!",
+        "error" => [
+          "error" => "401",
+          "message" => "Invalid Employee ID!",
+        ],
+      ]);
+    }
+    //to check if employee already exists
+    else {
+      $all_emp = db_select('employee', 'emp')
+                  ->fields('emp')
+                  ->condition('id', $_REQUEST['id'], '=')
+                  ->execute()->fetchAll();
+      if($all_emp) {
+        http_response_code(401);
+        return drupal_json_output ([
+          "status_code" => "401",
+          "message" => "Employee already exists.",
+          "error" => [
+            "error" => "401",
+            "message" => "Employee already exists.",
+          ],
+        ]);
+      }
+    }
+    //to check if the name is provided, as I have set that to not null value
+    if(!isset($_REQUEST['name'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee Name cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee Name cannot be empty.",
+        ],
+      ]);
+    }
+    // to check if name is valid string
+    else if (!preg_match ("/^[a-zA-z]*$/", $_REQUEST['name']) )  {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Only alphabets and white spaces are alowed in name.",
+        "error" => [
+          "error" => "401",
+          "message" => "Only alphabets and white spaces are alowed in name.",
+        ],
+      ]);
+    }
+    //to check if the job is provided, as I have set that to not null value
+    if(!isset($_REQUEST['job'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee job cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee job cannot be empty.",
+        ],
+      ]);
+    }
+    // to check if job is valid alpha numeric value
+    else if (!preg_match ("/^[a-z0-9 .\-]+$/i", $_REQUEST['job']) )  {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Invalid value for Job",
+        "error" => [
+          "error" => "401",
+          "message" => "Invalid value for Job",
+        ],
+      ]);
+    }
+
+    //to check if the dept is provided, as I have set that to not null value
+    if(!isset($_REQUEST['dept'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee Department cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee Department cannot be empty.",
+        ],
+      ]);
+    }
+    // to check if department is valid string
+    else if (!preg_match ("/^[a-zA-z]*$/", $_REQUEST['dept']) )  {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Invalid value for Department",
+        "error" => [
+          "error" => "401",
+          "message" => "Invalid value for Department",
+        ],
+      ]);
+    }
+    //to check if the hire_date is provided, as I have set that to not null value
+    if(!isset($_REQUEST['hire_date'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee Hire Date cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee Hire Date cannot be empty.",
+        ],
+      ]);
+    }
+    // to check if hire date is in correct format
+    else if (!strtotime($_REQUEST['hire_date']))  {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Incorrect date format",
+        "error" => [
+          "error" => "401",
+          "message" => "Invalid value for Date please use format d-m-Y i.e. (18-03-2022)",
+        ],
+      ]);
+    }
+    // to check if hire date is in 100 year range
+    else if (strtotime($_REQUEST['hire_date']) > strtotime(date("31-12-2050")) || strtotime($_REQUEST['hire_date']) < strtotime(date("01-01-1950"))) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Invalid value of Date",
+        "error" => [
+          "error" => "401",
+          "message" => "Please enter a value between 1950-2050",
+        ],
+      ]);
+    }
+    //to check if salary is provided, as I have set that to not null value
+    if(!isset($_REQUEST['salary'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee salary cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee salary cannot be empty.",
+        ],
+      ]);
+    }
+    // to check salary is a positive integer
+    else if ($_REQUEST['salary'] < 0 || !is_numeric($_REQUEST['salary'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Invalid Employee salary!",
+        "error" => [
+          "error" => "401",
+          "message" => "Invalid Employee salary!",
+        ],
+      ]);
+    }
+    // if input passes all conditions, insert into db
+    $record_added = db_insert('employee')
+                  ->fields(array(
+                    'id' => $_REQUEST['id'], 
+                    'name' => $_REQUEST['name'],
+                    'job' => $_REQUEST['job'], 
+                    'dept' => $_REQUEST['dept'],
+                    'hire_date' => strtotime($_REQUEST['hire_date']),
+                    'salary' => $_REQUEST['salary'],
+                  ))->execute();
+    http_response_code(200);
+    return drupal_json_output( [
+      "status_code" => "200",
+      "message" => "success",
+      "error" => [],
+    ]);
+  }
+  else {
+      http_response_code(403);
+      return drupal_json_output( [
+        "status_code" => "403",
+        "message" => "Fornidden",
+        "error" => [],
+      ]);
+  }
+}
+//function to read employees data
+function read_employees() {
+  if($_SERVER['REQUEST_METHOD'] == "GET") {
+    //fetching data from DB
+    $all_emp = db_select('employee', 'emp')
+    ->fields('emp')
+    ->execute()->fetchAll();
+    http_response_code(200);
+    $final_data = [
+      "status_code" => "200",
+      "message" => "success",
+      "error" => []
+    ];
+    //storng data into array
+    foreach($all_emp as $key=>$value) {
+      $final_data["data"][] = [
+        'id' => $value->id, 
+        'name' => $value->name,
+        'job' => $value->job, 
+        'dept' => $value->dept,
+        'hire_date' => date('m-d-Y',$value->hire_date),
+        'salary' => $value->salary,
+      ];
+    }
+  }
+  else {
+    http_response_code(403);
+    $final_data = [
+      "status_code" => "403",
+      "message" => "Forbidden",
+      "error" => []
+    ];
+  }
+  return drupal_json_output($final_data);
+}
+
+//function to perform update operation
+function update_employee() {
+  if($_SERVER['REQUEST_METHOD'] == "POST") {
+    //to check if the id is provided
+    if(!isset($_REQUEST['id'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Employee ID cannot be empty.",
+        "error" => [
+          "error" => "401",
+          "message" => "Employee ID cannot be empty.",
+        ],
+      ]);
+    }
+    // to check id is a positive integer
+    else if ($_REQUEST['id'] < 0 || !is_numeric($_REQUEST['id'])) {
+      http_response_code(401);
+      return drupal_json_output ([
+        "status_code" => "401",
+        "message" => "Invalid Employee ID!",
+        "error" => [
+          "error" => "401",
+          "message" => "Invalid Employee ID!",
+        ],
+      ]);
+    }
+    else {
+      $update_emp = db_select('employee', 'emp')
+                  ->fields('emp')
+                  ->condition('id', $_REQUEST['id'], '=')
+                  ->execute()->fetchAll();
+        if(!$update_emp) {
+          http_response_code(401);
+          return drupal_json_output ([
+            "status_code" => "401",
+            "message" => "Employee not found",
+            "error" => [
+              "error" => "401",
+              "message" => "Employee not found",
+            ],
+          ]);
+        }
+        $name = $update_emp[0]->name;
+        $job = $update_emp[0]->job;
+        $dept = $update_emp[0]->dept;
+        $hire_date = $update_emp[0]->hire_date;
+        $salary = $update_emp[0]->salary;
+        if (isset($_REQUEST['name'])) {
+          //to check if name is valid string (alphabets and white spaces)
+          if (!preg_match ("/^[a-zA-z]*$/", $_REQUEST['name']) )  {
+            http_response_code(401);
+            return drupal_json_output ([
+              "status_code" => "401",
+              "message" => "Only alphabets and white spaces are alowed in name.",
+              "error" => [
+                "error" => "401",
+                "message" => "Only alphabets and white spaces are alowed in name.",
+              ],
+            ]);
+          }
+          else {
+            $name = $_REQUEST['name'];
+          }
+        }
+        if (isset($_REQUEST['job'])) {
+          //to check if job is valid string (alphabets and white spaces and numbers)
+          if (!preg_match ("/^[a-z0-9 .\-]+$/i", $_REQUEST['job']) )  {
+            http_response_code(401);
+            return drupal_json_output ([
+              "status_code" => "401",
+              "message" => "Invalid value for Job",
+              "error" => [
+                "error" => "401",
+                "message" => "Invalid value for Job",
+              ],
+            ]);
+          }
+          else {
+            $job = $_REQUEST['job'];
+          }
+        }
+        if (isset($_REQUEST['dept'])) {
+          //to check if dept is valid string (alphabets and white spaces)
+          if (!preg_match ("/^[a-zA-z]*$/", $_REQUEST['dept']) )  {
+            http_response_code(401);
+            return drupal_json_output ([
+              "status_code" => "401",
+              "message" => "Invalid value for Department",
+              "error" => [
+                "error" => "401",
+                "message" => "Invalid value for Department",
+              ],
+            ]);
+          }
+          else {
+            $dept = $_REQUEST['dept'];
+          }
+        }
+        if (isset($_REQUEST['hire_date'])) {
+          //to check if hire date is in valid format
+          if (!strtotime($_REQUEST['hire_date']))  {
+            http_response_code(401);
+            return drupal_json_output ([
+              "status_code" => "401",
+              "message" => "Incorrect date format",
+              "error" => [
+                "error" => "401",
+                "message" => "Invalid value for Date please use format d-m-Y i.e. (18-03-2022)",
+              ],
+            ]);
+          }
+          // to check if hire date is in 100 year range
+          else if (strtotime($_REQUEST['hire_date']) > strtotime(date("31-12-2050")) || strtotime($_REQUEST['hire_date']) < strtotime(date("01-01-1950"))) {
+            http_response_code(401);
+            return drupal_json_output ([
+              "status_code" => "401",
+              "message" => "Invalid value of Date",
+              "error" => [
+                "error" => "401",
+                "message" => "Please enter a value between 1950-2050",
+              ],
+            ]);
+          }
+          else {
+            $hire_date = $_REQUEST['hire_date'];
+          }
+        }
+        if (isset($_REQUEST['salary'])) {
+          //to check if salary is positive integer
+          if ($_REQUEST['salary'] < 0 || !is_numeric($_REQUEST['salary'])) {
+            http_response_code(401);
+            return drupal_json_output ([
+              "status_code" => "401",
+              "message" => "Invalid Employee salary!",
+              "error" => [
+                "error" => "401",
+                "message" => "Invalid Employee salary!",
+              ],
+            ]);
+          }
+          else {
+            $salary = $_REQUEST['salary'];
+          }
+        }
+        //if all conditions pass, update data in DB
+        $emp_update = db_update('employee')
+                    ->fields( array(
+                        'name' => $name,
+                        'job' =>  $job,
+                        'dept' =>  $dept,
+                        'hire_date' =>  strtotime($hire_date),
+                        'salary' =>  $salary,
+                        )
+                      )
+                    ->condition('id', $_REQUEST['id'], '=')
+                    ->execute();
+        http_response_code(200);
+        $final_data = [
+          "status_code" => "200",
+          "message" => "success",
+          "error" => [],
+        ];
+    }
+  }
+  else {
+     http_response_code(403);
+        return drupal_json_output ([
+          "status_code" => "403",
+          "message" => "Forbidden",
+          "error" => [],
+        ]);
+  }
+  return drupal_json_output($final_data);
+}
+
+//function to perform delete operation
+function delete_employee() {
+  if($_SERVER['REQUEST_METHOD'] == "POST") {
+    if(!isset($_REQUEST['id'])) {
+      http_response_code(401);
+      $final_data = [
+        "status_code" => "401",
+        "message" => "Request can't be empty.",
+        "error" => [
+          'error' =>'401',
+          "message" => "Please provide Employee ID",
+        ]
+      ];
+    }
+    else {
+      $emp_id = $_REQUEST['id'];
+      $record_deleted = db_delete('employee')
+      ->condition('id', $emp_id)
+      ->execute();
+      if($record_deleted){
+        http_response_code(200);
+        $final_data = [
+          "status_code" => "200",
+          "message" => "success",
+          "error" => [],
+        ];
+      }
+      else {
+        http_response_code(404);
+        $final_data = [
+          "status_code" => "404",
+          "message" => "Record not Found",
+          "error" => [],
+        ];
+      }
+    }
+  }
+  else {
+    http_response_code(403);
+    $final_data = [
+      "status_code" => "403",
+      "message" => "Forbidden",
+      "error" => [],
+    ];
+  }
+  return drupal_json_output($final_data);
+}
+

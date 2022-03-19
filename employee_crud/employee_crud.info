@@ -1,0 +1,5 @@
+name='Employee CRUD operations'
+description='Module to privde REST APIs to perform crud opetaions on Employees.'
+version=7.x-1.0
+core=7.x
+package=Custom

@@ -9,6 +9,6 @@ To run this project install
 3. drupal 7 cms
 `````
 
-place the code in projects directory in drupal project folder. 
-Install this module from the CMS
+Place the code in projects directory in drupal project folder. <br/>
+Install this module from the CMS <br/>
 Hit the urls provided in `.module` file on post man to see the results.
